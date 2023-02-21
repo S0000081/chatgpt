@@ -38,12 +38,11 @@ func validateUrl(w http.ResponseWriter, r *http.Request) bool {
 }
 
 func procSignature(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm() //Request需要解析
-	if !validateUrl(w, r) {
-		log.Println("Wechat Service: This http request is not from wechat platform")
-		return
-	}
-	log.Println("validateUrl Ok")
+
+	b, _ := io.ReadAll(r.Body)
+	defer r.Body.Close()
+	log.Println("Wechat Service: Receive Msg: ", string(b))
+
 }
 
 func main() {
