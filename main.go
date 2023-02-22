@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/sha1"
+	"encoding/xml"
 	"fmt"
 	"io"
 	"log"
@@ -37,10 +38,23 @@ func validateUrl(w http.ResponseWriter, r *http.Request) bool {
 	return true
 }
 
+type Body struct {
+	ToUserName   string `xml:"ToUserName"`
+	FromUserName string `xml:"FromUserName"`
+	CreateTime   string `xml:"CreateTime"`
+	MsgType      string `xml:"MsgType"`
+	Content      string `xml:"Content"`
+	MsgId        string `xml:"MsgId"`
+}
+
 func procSignature(w http.ResponseWriter, r *http.Request) {
 
-	b, _ := io.ReadAll(r.Body)
+	b, err := io.ReadAll(r.Body)
+	log.Println(err)
 	defer r.Body.Close()
+	var body Body
+	err = xml.Unmarshal(b, &body)
+	log.Println(body)
 	log.Println("Wechat Service: Receive Msg: ", string(b))
 
 }
