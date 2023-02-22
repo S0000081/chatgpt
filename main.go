@@ -94,7 +94,7 @@ func procSignature(w http.ResponseWriter, r *http.Request) {
 			FromUserName: body.ToUserName,
 			CreateTime:   strconv.FormatInt(time.Now().Unix(), 10),
 			MsgType:      "text",
-			Content:      "暂时只支持文本消息",
+			Content:      "暂时只支持文本消息😯",
 		}
 		bReply, _ := xml.Marshal(reply)
 		w.Header().Set("Content-Type", "application/xml")
