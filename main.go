@@ -115,7 +115,7 @@ func procSignature(w http.ResponseWriter, r *http.Request) {
 
 	request, _ := http.NewRequest(http.MethodPost, "https://api.openai.com/v1/completions", strings.NewReader(string(bMsg)))
 	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Authorization", "Bearer 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")
+	request.Header.Set("Authorization", "Bearer "+os.Getenv("OPEN_KEY"))
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
 		log.Println(err)
