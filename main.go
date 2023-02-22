@@ -107,7 +107,7 @@ func procSignature(w http.ResponseWriter, r *http.Request) {
 		Model:            "text-davinci-003",
 		Prompt:           body.Content,
 		Temperature:      0.5,
-		MaxTokens:        60,
+		MaxTokens:        4000,
 		TopP:             1.0,
 		FrequencyPenalty: 0.5,
 		PresencePenalty:  0.0,
