@@ -6,6 +6,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"os"
 	"log"
 	"net/http"
 	"sort"
