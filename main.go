@@ -2,13 +2,16 @@ package main
 
 import (
 	"crypto/sha1"
+	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"sort"
+	"strconv"
 	"strings"
+	"time"
 )
 
 const (
@@ -47,6 +50,36 @@ type Body struct {
 	MsgId        string `xml:"MsgId"`
 }
 
+// Reply 消息回复结构体
+type Reply struct {
+	XMLName      xml.Name `xml:"xml"`
+	ToUserName   string   `xml:"ToUserName"`
+	FromUserName string   `xml:"FromUserName"`
+	CreateTime   string   `xml:"CreateTime"`
+	MsgType      string   `xml:"MsgType"`
+	Content      string   `xml:"Content"`
+}
+
+type Msg struct {
+	Model            string  `json:"model"`
+	Prompt           string  `json:"prompt"`
+	Temperature      float64 `json:"temperature"`
+	MaxTokens        int64   `json:"max_tokens"`
+	TopP             float64 `json:"top_p"`
+	FrequencyPenalty float64 `json:"frequency_penalty"`
+	PresencePenalty  float64 `json:"presence_penalty"`
+}
+
+type Text struct {
+	Text string `json:"text"`
+}
+
+type gptMsg struct {
+	Id      string `json:"id"`
+	Object  string `json:"object"`
+	Choices []Text `json:"choices"`
+}
+
 func procSignature(w http.ResponseWriter, r *http.Request) {
 
 	b, err := io.ReadAll(r.Body)
@@ -54,9 +87,44 @@ func procSignature(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	var body Body
 	err = xml.Unmarshal(b, &body)
-	log.Println(body)
-	log.Println("Wechat Service: Receive Msg: ", string(b))
+	msg := Msg{
+		Model:            "text-davinci-003",
+		Prompt:           body.Content,
+		Temperature:      0.5,
+		MaxTokens:        60,
+		TopP:             1.0,
+		FrequencyPenalty: 0.5,
+		PresencePenalty:  0.0,
+	}
+	bMsg, _ := json.Marshal(msg)
 
+	request, _ := http.NewRequest(http.MethodPost, "https://api.openai.com/v1/completions", strings.NewReader(string(bMsg)))
+	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("Authorization", "Bearer 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")
+	response, err := http.DefaultClient.Do(request)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer response.Body.Close()
+	b, err = io.ReadAll(response.Body)
+	log.Println(string(b))
+	gptMsg := gptMsg{}
+	err = json.Unmarshal(b, &gptMsg)
+	if err != nil || len(gptMsg.Choices) == 0 {
+		log.Println(err)
+		return
+	}
+	reply := Reply{
+		ToUserName:   body.FromUserName,
+		FromUserName: body.ToUserName,
+		CreateTime:   strconv.FormatInt(time.Now().Unix(), 10),
+		MsgType:      "text",
+		Content:      strings.ReplaceAll(gptMsg.Choices[0].Text, "\n", ""),
+	}
+	bReply, _ := xml.Marshal(reply)
+	w.Header().Set("Content-Type", "application/xml")
+	w.Write(bReply)
 }
 
 func main() {
