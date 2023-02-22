@@ -87,6 +87,21 @@ func procSignature(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	var body Body
 	err = xml.Unmarshal(b, &body)
+
+	if body.MsgType != "text" {
+		reply := Reply{
+			ToUserName:   body.FromUserName,
+			FromUserName: body.ToUserName,
+			CreateTime:   strconv.FormatInt(time.Now().Unix(), 10),
+			MsgType:      "text",
+			Content:      "暂时只支持文本消息",
+		}
+		bReply, _ := xml.Marshal(reply)
+		w.Header().Set("Content-Type", "application/xml")
+		w.Write(bReply)
+		return
+	}
+
 	msg := Msg{
 		Model:            "text-davinci-003",
 		Prompt:           body.Content,
